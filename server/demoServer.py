@@ -10,10 +10,14 @@ CORS(app)
 def home():
     return app.send_static_file('index.html')
 
+count = 0
+
 @app.route('/get-data')
 def data():
+    global count
     csv_dir = "./static"
-    csv_file = "test-temperatures.csv"
+    csv_file = "test-temperatures-" + str(count % 5) + ".csv"
+    count += 1
     csv_path = os.path.join(csv_dir, csv_file)
 
     if not os.path.isfile(csv_path):

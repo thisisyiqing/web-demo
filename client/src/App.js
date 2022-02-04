@@ -1,45 +1,72 @@
 import React from 'react';
 import Button from 'react-bootstrap/Button';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 class App extends React.Component{
 
   constructor() {
     super()
     this.state = {
-      data: []
+      data: [],
+      text: ''
     }
+    this.intervalID = 0
+    this.fetchData = this.fetchData.bind(this)
   }
 
-  componentDidUpdate() {
-    console.log("data updated")
-    // console.log(this.state.data)
-  }
-
-  getData = async () => {
-    try {
-      let url = `http://localhost:5000/get-data`
-      let responsePromise = fetch(url)
-      let response = await responsePromise
-      if (!response.ok) {
-          alert("we are not ok :(" + response.status)
-          return
+  fetchData() {
+    console.log("im in")
+    fetch('http://localhost:5000/get-data',{
+      'methods':'GET',
+      headers : {
+        'Content-Type':'application/json'
       }
+    })
+    .then(response => response.json())
+    .then(response => this.setState({data: response}))
+    .catch(error => console.log(error))
+  }
 
-      let jsonData = await response.json()
+  changeText = () => {
+    if(this.intervalID === 0) {
+      this.intervalID = setInterval(this.fetchData, 3000);
+
       this.setState({
-        data: jsonData
+        text: 'Data collection started!'
       })
-    } catch(e) {
-      alert("an error occurred when contacting the server")
-      console.log(e)
     }
   }
+
+  stopInterval = () => {
+    clearInterval(this.intervalID);
+  }
+
   
   
   render() {
     return (
       <div>
-        <Button variant="primary" onClick={this.getData}>Start</Button>
+        <Button variant="primary" onClick={this.changeText}>Start</Button>
+        <div>{this.state.text}</div>
+        <Button variant="primary" onClick={this.stopInterval}>Stop</Button>
+
+        <LineChart
+          width = {1200}
+          height = {400}
+          data = {this.state.data}
+          margin = {{
+            top: 5,
+            right: 30,
+            left: 20,
+            bottom: 5,
+          }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="time" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Line dataKey="temp" stroke="#8884d8" activeDot={{ r: 8 }} />
+        </LineChart>
       </div>
     );
   }
